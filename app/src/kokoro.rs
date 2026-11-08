@@ -12,6 +12,7 @@ pub const MODEL_URL: &str =
 const RUNTIME_DIR: &str = "sherpa-onnx-v2.0.1-win-x64-shared-MT-Release";
 const MODEL_DIR: &str = "kokoro-multi-lang-v1_0";
 const LEGACY_DIR: &str = "kokoro-int8-multi-lang-v1_0";
+const CHESS_LEXICON: &str = include_str!("../data/lexicon-chess.txt");
 
 /// (id, speaker id, label)
 pub const VOICES: &[(&str, i32, &str)] = &[
@@ -99,13 +100,18 @@ fn load(data: &Path) -> Result<Engine, String> {
     let tokens = p("tokens.txt");
     let data_dir = p("espeak-ng-data");
     let dict_dir = p("dict");
+    // Chess words the stock dictionary lacks ("develops", "recaptures", …).
+    let chess_lex = root(data).join("lexicon-chess.txt");
+    let _ = std::fs::write(&chess_lex, CHESS_LEXICON);
     let lexicon = CString::new(format!(
-        "{},{}",
+        "{},{},{}",
+        chess_lex.to_string_lossy(),
         md.join("lexicon-us-en.txt").to_string_lossy(),
         md.join("lexicon-zh.txt").to_string_lossy()
     ))
     .unwrap();
     let empty = CString::new("").unwrap();
+
     let cpu = CString::new("cpu").unwrap();
     let e = empty.as_ptr();
     let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
