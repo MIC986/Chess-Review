@@ -9,11 +9,11 @@ Move classifications, accuracy, an eval graph and a coach who talks you through 
 
 Chess.com reviews · open source.
 
+### [**Download**](../../releases/latest)
+
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-2b2926?style=for-the-badge&logo=windows&logoColor=white)](#-download)
 [![Rust](https://img.shields.io/badge/Rust-Tauri%202-81b64c?style=for-the-badge&logo=rust&logoColor=white)](https://tauri.app)
 [![Engine](https://img.shields.io/badge/engine-Stockfish%2019-749bbf?style=for-the-badge)](https://stockfishchess.org)
-
-[**Download**](../../releases/latest)
 
 [Features](#-features) · [Browser extension](#-browser-extension) · [Build from source](#%EF%B8%8F-build-from-source)
 
