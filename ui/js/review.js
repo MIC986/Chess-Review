@@ -182,7 +182,7 @@ export class ReviewView {
     if (fresh) play('end');
     this.renderSidebar();
     this.goto(this.ply, { silent: true });
-    if (fresh || settings.voiceOn) this.speak(this.story(), 400);
+    if (fresh || settings.voiceOn) this.speak(this.storySpeech(), 400);
     this.prefetchAll();
   }
 
@@ -891,7 +891,7 @@ export class ReviewView {
     const bubble = h(
       'div',
       { class: 'bubble' },
-      h('div', { class: 'b-head' }, h('span', { class: 'b-title' }, this.resultTitle()), h('button', { class: 'speak-btn', html: icons.speaker, onclick: () => voice.speak(this.story(), { force: true }) })),
+      h('div', { class: 'b-head' }, h('span', { class: 'b-title' }, this.resultTitle()), h('button', { class: 'speak-btn', html: icons.speaker, onclick: () => voice.speak(this.storySpeech(), { force: true }) })),
       h('div', { class: 'b-text' }, this.story()),
     );
     this.graph = evalGraph(r, { onSelect: (p) => { this.phase = 'review'; this.renderSidebar(); this.goto(p, { fromUser: true }); }, ply: this.ply });
@@ -960,6 +960,15 @@ export class ReviewView {
       console.warn(e);
       return this.review.summary;
     }
+  }
+
+  /** The summary as spoken: player names (which the voice can't pronounce) become White / Black. */
+  storySpeech() {
+    let t = this.story();
+    for (const [p, c] of [[this.white, 'White'], [this.black, 'Black']]) {
+      if (p?.name) t = t.split(p.name).join(c);
+    }
+    return t;
   }
 
   resultTitle() {
