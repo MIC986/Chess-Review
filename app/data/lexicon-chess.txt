@@ -1,0 +1,60 @@
+analyzed ˈ æ n ᵊ l ˌ I z d
+arrows ˈ ɛ ɹ O z
+autoplaying ˈ ɔ ɾ O p l ˌ A ɪ ŋ
+bishop's b ˈ ɪ ʃ ə p s
+black's b l ˈ æ k s
+classifications k l ˌ æ s ə f ə k ˈ A ʃ ə n z
+com's k ˈ ɑ m z
+computed k ə m p j ˈ u t ᵻ d
+credits k ɹ ˈ ɛ d ə t s
+defaults d ə f ˈ ɔ l t s
+defends d ə f ˈ ɛ n d z
+delivered d ə l ˈ ɪ v ə ɹ d
+develops d ə v ˈ ɛ l ə p s
+endgames ˈ ɛ n d ɡ ˌ A m z
+endorsed ɪ n d ˈ ɔ ɹ s t
+engines ˈ ɛ n ʤ ə n z
+equalized ˈ i k w ə l ˌ I z d
+equalizes ˈ i k w ə l ˌ I z ᵻ z
+explored ɪ k s p l ˈ ɔ ɹ d
+extensions ɪ k s t ˈ ɛ n ʃ ᵊ n z
+gets ɡ ɛ t s
+highlighted h ˈ I l ˌ I t ᵻ d
+highlights h ˈ I l ˌ I t s
+icons ˈ I k ˌ ɑ n z
+inaccuracies ɪ n ˈ æ k j ə ɹ ə s i z
+instances ˈ ɪ n s t ᵊ n s ᵻ z
+js ʤ ˈ A z
+king's k ˈ ɪ ŋ z
+knight's n ˈ I t s
+labels l ˈ A b ə l z
+makes m ˌ A k s
+mated m ˈ æ t ᵻ d
+middlegame m ˈ ɪ d ᵊ l ɡ ˌ A m
+middlegames m ˈ ɪ d ᵊ l ɡ ˌ A m z
+mistakes m ə s t ˈ A k s
+moments m ˈ O m ᵊ n t s
+openings ˈ O p ᵊ n ɪ ŋ z
+opens ˈ O p ᵊ n z
+opponent's ə p ˈ O n ə n t s
+outposts ˈ W t p ˌ O s t s
+pawn's p ˈ ɔ n z
+promoted p ɹ ə m ˈ O t ᵻ d
+puts p ˌ ʊ t s
+queen's k w ˈ i n z
+recaptures ɹ i k ˈ æ p ʧ ə ɹ z
+resets ɹ i s ˈ ɛ t s
+restored ɹ ə s t ˈ ɔ ɹ d
+results ɹ ə z ˈ ʌ l t s
+retries ɹ i t ɹ ˈ I z
+revealed ɹ ə v ˈ i l d
+reviews ɹ ə v j ˈ u z
+robots ɹ ˈ O b ˌ ɑ t s
+rook's ɹ ˈ ʊ k s
+sacrificed s ˈ æ k ɹ ə f ˌ I s t
+sacrifices s ˈ æ k ɹ ə f ˌ I s ᵻ z
+shortcuts ʃ ˈ ɔ ɹ t k ˌ ʌ t s
+swatches s w ˈ ɔ ʧ ᵻ z
+unpacked ˌ ʌ n p ˈ æ k t
+variations v ˌ ɛ ɹ i ˈ A ʃ ə n z
+white's w ˈ I t s
