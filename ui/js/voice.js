@@ -33,6 +33,29 @@ export async function kokoroInstalled(refresh = false) {
 
 // ------------------------------------------------------------ text preparation
 const PIECE = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight' };
+// The voice reads words from a dictionary: anything not in it (like "f6" or "33") is skipped,
+// so every square, number and symbol is turned into plain words first.
+const FILE = { a: 'A', b: 'B', c: 'C', d: 'D', e: 'E', f: 'F', g: 'G', h: 'H' };
+const ONES = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+
+export function numberWords(n) {
+  n = Math.floor(Math.abs(n));
+  if (n < 20) return ONES[n];
+  if (n < 100) return TENS[Math.floor(n / 10)] + (n % 10 ? ' ' + ONES[n % 10] : '');
+  if (n < 1000) return ONES[Math.floor(n / 100)] + ' hundred' + (n % 100 ? ' ' + numberWords(n % 100) : '');
+  if (n < 1000000) return numberWords(n / 1000) + ' thousand' + (n % 1000 ? ' ' + numberWords(n % 1000) : '');
+  return String(n);
+}
+
+function decimalWords(str) {
+  const [int, frac] = str.split('.');
+  let out = numberWords(+int);
+  if (frac) out += ' point ' + [...frac].map((d) => ONES[+d]).join(' ');
+  return out;
+}
+
+const squareWords = (sq) => `${FILE[sq[0]]} ${ONES[+sq[1]]}`;
 
 /** Turn SAN into something a voice can read naturally. */
 export function sanToSpeech(san) {
@@ -51,10 +74,11 @@ export function sanToSpeech(san) {
       const [, piece, df, dr, cap, to, , promo] = m;
       const parts = [];
       if (piece) parts.push(PIECE[piece]);
-      else if (cap && df) parts.push(df.toUpperCase());
-      if (piece && (df || dr)) parts.push((df || '').toUpperCase() + (dr || ''));
+      else if (cap && df) parts.push(FILE[df]);
+      if (piece && df) parts.push(FILE[df]);
+      if (piece && dr) parts.push(ONES[+dr]);
       if (cap) parts.push('takes');
-      parts.push(to.toUpperCase());
+      parts.push(squareWords(to));
       if (promo) parts.push('promotes to ' + PIECE[promo]);
       out = parts.join(' ');
     }
@@ -64,14 +88,28 @@ export function sanToSpeech(san) {
   return out;
 }
 
-/** Replace SAN tokens inside a sentence with spoken versions. */
+/** Make any coach sentence fully speakable. */
 export function speechText(text) {
-  return String(text || '')
-    .replace(/\b(O-O-O|O-O)([+#]?)/g, (m) => sanToSpeech(m))
-    .replace(/\b([KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?)(?=[\s.,!?:;)]|$)/g, (m) => sanToSpeech(m))
-    .replace(/\+(\d+(\.\d+)?)/g, 'plus $1')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    String(text || '')
+      // moves in SAN (Nf3, exd5, O-O, e8=Q+)
+      .replace(/\b(O-O-O|O-O)([+#]?)/g, (m) => sanToSpeech(m))
+      .replace(/\b([KQRBN][a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?[+#]?|[a-h]x[a-h][1-8](?:=[QRBN])?[+#]?|[a-h][1-8]=[QRBN][+#]?|[a-h][1-8][+#])(?=[\s.,!?:;)]|$)/g, (m) => sanToSpeech(m))
+      // bare squares ("on f6", "e4 was best")
+      .replace(/\b([a-h])([1-8])\b/g, (_, f, r) => `${FILE[f]} ${ONES[+r]}`)
+      // evaluations and numbers
+      .replace(/\+(\d+(?:\.\d+)?)/g, (_, n) => 'plus ' + decimalWords(n))
+      .replace(/(^|[\s(])-(\d+(?:\.\d+)?)/g, (_, pre, n) => pre + 'minus ' + decimalWords(n))
+      .replace(/(\d+)%/g, (_, n) => numberWords(+n) + ' percent')
+      .replace(/\d+\.\d+/g, (m) => decimalWords(m))
+      .replace(/\d+/g, (m) => numberWords(+m))
+      // hyphenated words ("back-and-forth") and stray symbols
+      .replace(/([A-Za-z])-(?=[A-Za-z])/g, '$1 ')
+      .replace(/[…]/g, '.')
+      .replace(/[:;()]/g, ',')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 const CLASS_WORDS = 'best|brilliant|great|excellent|good|forced|a book move|book|an inaccuracy|inaccurate|a mistake|a miss|a blunder';
