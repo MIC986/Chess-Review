@@ -7,6 +7,8 @@
 **Fast, beautiful, offline game review for your chess.com games.**<br/>
 Move classifications, accuracy, an eval graph and a coach who talks you through every move.
 
+Chess.com reviews · open source.
+
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-2b2926?style=for-the-badge&logo=windows&logoColor=white)](#-download)
 [![Rust](https://img.shields.io/badge/Rust-Tauri%202-81b64c?style=for-the-badge&logo=rust&logoColor=white)](https://tauri.app)
 [![Engine](https://img.shields.io/badge/engine-Stockfish%2019-749bbf?style=for-the-badge)](https://stockfishchess.org)
@@ -22,31 +24,31 @@ Move classifications, accuracy, an eval graph and a coach who talks you through 
 
 <br/>
 
-## ✨ Features
+## Features
 
 <table>
 <tr>
 <td width="50%" valign="top">
 
-### 🎯 Every move, classified
+### Every move, classified
 Brilliant, Great, Best, Excellent, Good, Book, Inaccuracy, Mistake, Miss and Blunder. Each move gets a badge on the board, tinted squares and a green arrow for the better move.
 
-### 🗣️ A coach that actually talks
+### A coach that actually talks
 Pick **Maya**, **Leo** or **Bella**. Each coach has a natural neural voice that runs fully offline and explains *why* a move was good or bad: hanging pieces, forks, missed mates, material won.
 
-### 📈 Accuracy & game rating
+### Accuracy & game rating
 Per-player accuracy, an estimated game rating and phase grades for the opening, middlegame and endgame. If chess.com already reviewed the game, its accuracy is shown alongside for comparison.
 
 </td>
 <td width="50%" valign="top">
 
-### 🔁 Retry your mistakes
+### Retry your mistakes
 Jump into any inaccuracy, mistake or blunder and find the better move yourself, with hints, the solution and confetti when you get it right.
 
-### 🔑 Key moments & live analysis
+### Key moments & live analysis
 Skip straight to the turning points, see live Stockfish lines, or drag any piece to explore your own ideas. Every explored move gets classified too.
 
-### 🧩 One click from chess.com
+### One click from chess.com
 The browser extension makes chess.com's own **Game Review** buttons open the game here instead. Switch back any time from the toolbar.
 
 </td>
@@ -73,7 +75,7 @@ The browser extension makes chess.com's own **Game Review** buttons open the gam
 
 <br/>
 
-## 📥 Download
+## Download
 
 1. Grab **`Chess-Review-1.0-Windows.zip`** from the [latest release](../../releases/latest).
 2. Unzip it somewhere permanent (for example `Documents\Chess Review`).
@@ -86,7 +88,7 @@ Type your chess.com username, click a game and press **Start Review**.
 
 <br/>
 
-## 🧩 Browser extension
+## Browser extension
 
 Works in Chrome, Edge, Brave and Opera.
 
@@ -107,7 +109,7 @@ Click the extension's toolbar icon to switch between **Chess Review** and **ches
 
 <br/>
 
-## ⌨️ Keyboard shortcuts
+## Keyboard shortcuts
 
 | Key | Action | | Key | Action |
 |:---:|---|---|:---:|---|
@@ -120,7 +122,7 @@ Right-drag on the board draws arrows and marks squares. The mouse wheel steps th
 
 <br/>
 
-## 🎨 Make it yours
+## Make it yours
 
 Everything is customizable from **Settings**:
 
