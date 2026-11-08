@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; width: 320px; background: #262421; color: rgba(255,255,255,.88); font: 13.5px -apple-system, "Segoe UI", system-ui, sans-serif; user-select: none; }
+      .head { display: flex; align-items: center; gap: 12px; padding: 16px; background: #21201d; }
+      .head img { width: 40px; height: 40px; border-radius: 9px; box-shadow: 0 3px 8px rgba(0,0,0,.4); }
+      .head b { display: block; font-size: 16px; color: #fff; }
+      .head span { color: #8b8987; font-size: 12px; }
+      .body { padding: 16px; }
+      .label { font-size: 11.5px; font-weight: 800; color: #8b8987; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+      .opt { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 2px solid transparent; cursor: pointer; transition: background .12s, border-color .12s; margin-bottom: 8px; }
+      .opt:hover { background: rgba(255,255,255,.08); }
+      .opt.active { border-color: #81b64c; background: rgba(129,182,76,.1); }
+      .opt .ico { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+      .opt .ico img { width: 34px; height: 34px; border-radius: 8px; }
+      .opt .ico.cc { background: #81b64c; color: #fff; }
+      .opt b { display: block; color: #fff; font-size: 14px; }
+      .opt small { color: #8b8987; font-size: 12px; }
+      .radio { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #5d5b58; flex-shrink: 0; position: relative; }
+      .opt.active .radio { border-color: #81b64c; }
+      .opt.active .radio::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: #81b64c; }
+      .note { color: #8b8987; font-size: 12px; line-height: 1.5; margin-top: 10px; }
+      .btn { display: flex; align-items: center; justify-content: center; width: 100%; height: 40px; margin-top: 14px; border: 0; border-radius: 7px; background: rgba(255,255,255,.09); color: #fff; font: 700 14px inherit; cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+      .btn:hover { background: rgba(255,255,255,.15); }
+      .status { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,.04); font-size: 12.5px; color: #b4b3b1; }
+      .dot { width: 9px; height: 9px; border-radius: 50%; background: #8b8987; flex-shrink: 0; }
+      .dot.ok { background: #81b64c; box-shadow: 0 0 8px rgba(129,182,76,.7); }
+      .dot.off { background: #e8913a; }
+    </style>
+  </head>
+  <body>
+    <div class="head"><img src="icons/128.png" alt="" /><div><b>Chess Review</b><span>Game Review buttons on chess.com</span></div></div>
+    <div class="body">
+      <div class="label">Game Review opens in</div>
+      <div class="opt" data-mode="app">
+        <div class="ico"><img src="icons/128.png" alt="" /></div>
+        <div><b>Chess Review app</b><small>Full review on your computer</small></div>
+        <div class="radio"></div>
+      </div>
+      <div class="opt" data-mode="chesscom">
+        <div class="ico cc">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.3l-5.4 2.9 1.1-6.1L3.2 8.9l6.1-.8z"/></svg>
+        </div>
+        <div><b>chess.com</b><small>Keep chess.com's own review</small></div>
+        <div class="radio"></div>
+      </div>
+      <div class="note">Applies to every Game Review button: game pages, the game-over screen, your archive and your profile.</div>
+      <div class="status"><span class="dot" id="dot"></span><span id="status">Checking the app…</span></div>
+      <button class="btn" id="open">Open Chess Review</button>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

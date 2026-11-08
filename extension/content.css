@@ -1,0 +1,10 @@
+/* Chess Review — only the confirmation toast; chess.com's own buttons keep their look. */
+.cr-toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 16px); opacity: 0; z-index: 2147483000;
+  display: flex; align-items: center; gap: 10px; padding: 11px 18px 11px 12px; border-radius: 10px;
+  background: #262421; color: #fff; font: 600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5); border: 1px solid rgba(255, 255, 255, .07);
+  transition: opacity .25s ease, transform .3s cubic-bezier(.22, .8, .26, 1); pointer-events: none;
+}
+.cr-toast img { width: 22px; height: 22px; border-radius: 5px; }
+.cr-toast.cr-show { opacity: 1; transform: translate(-50%, 0); }

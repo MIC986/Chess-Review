@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Chess Review - Open in App",
+  "short_name": "Chess Review",
+  "version": "1.3.0",
+  "description": "Makes chess.com's Game Review buttons open the Chess Review desktop app (switchable in the popup).",
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_title": "Chess Review",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/16.png",
+      "32": "icons/32.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.chess.com/*",
+        "https://chess.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "permissions": [
+    "storage"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/32.png"
+      ],
+      "matches": [
+        "https://www.chess.com/*",
+        "https://chess.com/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "http://127.0.0.1:47321/*"
+  ]
+}

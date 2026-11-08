@@ -1,0 +1,55 @@
+CHESS REVIEW 1.0
+================
+
+Game review for your chess.com games: move classifications, accuracy,
+evaluation graph, a voiced coach (Maya, Leo or Bella), Retry, Key Moments
+and live engine analysis. Runs on Windows 10/11.
+
+
+1. START THE APP
+----------------
+Put this folder somewhere permanent (for example Documents\Chess Review),
+then double-click "Chess Review.exe".
+
+On first launch it offers two one-time downloads (both run offline afterwards):
+  - Stockfish 19 chess engine (about 80 MB)
+  - The coach voices (about 380 MB)
+
+Type your chess.com username on the Games page and click any game to review it.
+
+
+2. INSTALL THE BROWSER EXTENSION (Chrome, Edge, Brave, Opera)
+------------------------------------------------------------
+  1. Open chrome://extensions (Edge: edge://extensions).
+  2. Turn on "Developer mode" (top right).
+  3. Click "Load unpacked" and choose the "extension" folder in this folder.
+
+chess.com's own "Game Review" buttons now open the review in Chess Review:
+on game pages, on the game-over screen, and in your archive and profile.
+Click the extension's toolbar icon to switch back to chess.com's review.
+
+If the app is closed, the browser asks once to open Chess Review. Tick
+"Always allow" so it opens instantly next time.
+
+"Chess Review Extension.zip" is the same extension packed for uploading to
+the Chrome Web Store, if you ever want to publish it.
+
+
+3. GOOD TO KNOW
+---------------
+- If you move the app to another folder, start it once from the new place
+  so the browser buttons find it again.
+- Your settings and saved reviews live in %APPDATA%\app.chessreview.desktop
+- Keyboard: Left/Right moves, Up/Down key moments, Space autoplay, F flip,
+  B best move, R retry, Esc back.
+- Accuracy and move classifications are computed by Chess Review with
+  Stockfish. They come out close to chess.com's numbers, but not identical.
+
+
+CREDITS
+-------
+Stockfish (GPLv3). Kokoro-82M voices via sherpa-onnx (Apache-2.0).
+Opening names: lichess chess-openings (CC0). Piece sets from the lichess
+project: cburnett and merida (GPLv2+), staunty, maestro, cardinal, tatiana
+and california (CC BY-NC-SA 4.0), chessnut (Apache 2.0), fantasy and celtic
+(MIT), alpha and companion (freeware). Not affiliated with Chess.com.
