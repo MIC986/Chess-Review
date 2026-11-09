@@ -73,7 +73,7 @@ export const DEFAULTS = {
   voiceOn: true,
   voiceEngine: 'kokoro',
   kokoroVoice: 'heart',
-  settingsVersion: 3,
+  settingsVersion: 4,
   systemVoice: '',
   neuralVoice: 'en_US-lessac-medium',
   voiceRate: 1.0,
@@ -82,7 +82,7 @@ export const DEFAULTS = {
   speakBest: false,
   coachName: 'Coach',
   coachAvatar: 'knight',
-  coach: 'maya',
+  coach: 'leo',
   engineStrength: 'balanced',
   depth: 16,
   threads: 1,
@@ -140,9 +140,15 @@ export async function loadSettings() {
     if ((state.settingsVersion || 1) < 3) {
       // v3: three coaches with their own natural voices.
       state.voiceEngine = 'kokoro';
-      state.coach = state.coach || 'maya';
+      state.coach = state.coach || 'leo';
       state.voicePromptSeen = false;
       state.settingsVersion = 3;
+      persist();
+    }
+    if ((state.settingsVersion || 1) < 4) {
+      // v4: Leo is the default coach.
+      state.coach = 'leo';
+      state.settingsVersion = 4;
       persist();
     }
   } catch {

@@ -251,7 +251,6 @@ const RENDER = {
     b.append(
       h('h3', {}, 'Account'),
       row('Your chess.com username', 'Used to load your games and to show the board from your side.', h('input', { class: 'input', value: settings.username, placeholder: 'username', onchange: (e) => (settings.username = e.target.value.trim()) })),
-      row('Board faces my side', 'Automatically flip the board when you played Black.', sw('autoFlip')),
       h('div', { class: 'info-card', style: { marginTop: '16px' } }, 'Chess Review only reads public data from the chess.com API — no login or password is needed.'),
     );
   },

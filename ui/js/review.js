@@ -44,7 +44,7 @@ function avatarEl(url, name, cls = 'avatar sm') {
 }
 
 function coachAvatarEl() {
-  const c = COACHES[settings.coach] || COACHES.maya;
+  const c = COACHES[settings.coach] || COACHES.leo;
   return h(
     'div',
     { class: 'coach-col' },
@@ -112,8 +112,10 @@ export class ReviewView {
     this.headers = this.base.headers || {};
     this.white = { name: this.headers.White || this.meta.white?.username || 'White', rating: this.headers.WhiteElo || this.meta.white?.rating };
     this.black = { name: this.headers.Black || this.meta.black?.username || 'Black', rating: this.headers.BlackElo || this.meta.black?.rating };
-    const me = (settings.username || '').toLowerCase();
-    if (settings.autoFlip && me && this.black.name.toLowerCase() === me) this.board.setOrientation('b');
+    // The player being viewed sits at the bottom, their opponent at the top.
+    this.viewer = this.meta.viewer || settings.username || '';
+    const me = this.viewer.toLowerCase();
+    if (me && this.black.name.toLowerCase() === me) this.board.setOrientation('b');
     else this.board.setOrientation('w');
     this.baseClock = parseTimeControl(this.headers.TimeControl);
     this.renderPlayers();
@@ -141,7 +143,7 @@ export class ReviewView {
     voice.onSpeaking((v) => this.el.querySelectorAll('.coach-avatar').forEach((a) => a.classList.toggle('talking', v)));
 
     if (!forceAnalyze) {
-      const cached = await invoke('load_review', { key: this.game.key }).catch(() => null);
+      const cached = await invoke('refresh_review', { key: this.game.key }).catch(() => null);
       if (cached && cached.moves?.length === this.base.moves.length) {
         this.onReview(cached, false);
         return;
@@ -180,6 +182,16 @@ export class ReviewView {
     this.review = review;
     this.phase = 'summary';
     if (fresh) play('end');
+    // Opened at a specific move (e.g. from Profile Review): jump straight there.
+    const sp = this.game.startPly;
+    if (sp && sp <= this.n) {
+      this.game.startPly = null;
+      this.phase = 'review';
+      this.renderSidebar();
+      this.goto(sp, { fromUser: true });
+      this.prefetchAll();
+      return;
+    }
     this.renderSidebar();
     this.goto(this.ply, { silent: true });
     if (fresh || settings.voiceOn) this.speak(this.storySpeech(), 400);
@@ -949,13 +961,13 @@ export class ReviewView {
   /** Coach text for a move, phrased for whoever is reviewing (you / your opponent / White/Black). */
   tx(rm, field = 'text') {
     if (!rm) return '';
-    return perspective(rm[field] || '', rm.color, myColor(settings.username, this.white, this.black));
+    return perspective(rm[field] || '', rm.color, myColor(this.viewer, this.white, this.black));
   }
 
   story() {
     if (!this.review) return '';
     try {
-      return gameStory(this.review, this.white, this.black, settings.username, (m) => this.tx(m));
+      return gameStory(this.review, this.white, this.black, this.viewer, (m) => this.tx(m));
     } catch (e) {
       console.warn(e);
       return this.review.summary;

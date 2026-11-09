@@ -20,7 +20,7 @@ function setSpeaking(v) {
 }
 
 export function coachVoice(id = settings.coach) {
-  return (COACHES[id] || COACHES.maya).voice;
+  return (COACHES[id] || COACHES.leo).voice;
 }
 
 export async function kokoroInstalled(refresh = false) {

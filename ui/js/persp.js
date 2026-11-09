@@ -31,7 +31,8 @@ export function perspective(text, mover, me) {
   // Opponent references first (they contain "your").
   t = t.replace(/\byour opponent's\b/g, () => hold(O.poss));
   t = t.replace(/\bYour opponent's\b/g, () => hold(O.Poss));
-  t = t.replace(/\byour opponent (win|gain|get|take)s\b/g, (_, v) => hold(`${O.subj} ${v}${O.verbS}`));
+  t = t.replace(/\b([Yy])our opponent (win|gain|get|take|force|grab|pick)s\b/g, (_, y, v) => hold(`${y === 'Y' ? O.Subj : O.subj} ${v}${O.verbS}`));
+  t = t.replace(/\b([Yy])our opponent (has|is)\b/g, (_, y, v) => hold(`${y === 'Y' ? O.Subj : O.subj} ${meIsOpp ? (v === 'has' ? 'have' : 'are') : v}`));
   t = t.replace(/\byour opponent\b/g, () => hold(O.subj));
   t = t.replace(/\bYour opponent\b/g, () => hold(O.Subj));
 

@@ -1,112 +1,156 @@
-// Synthesised board sounds (no external audio files needed).
+// Board sounds, synthesised on the fly (no audio files): a physically modelled wooden piece
+// knock for moves, a sharper double knock for captures, and soft marimba chimes for events.
 import { settings } from './settings.js';
 
 let ctx = null;
+let master = null;
 function ac() {
-  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Gentle bus compression keeps overlapping hits clean.
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14;
+    comp.knee.value = 10;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.002;
+    comp.release.value = 0.12;
+    master = ctx.createGain();
+    master.connect(comp).connect(ctx.destination);
+  }
   if (ctx.state === 'suspended') ctx.resume();
+  master.gain.value = settings.volume ?? 0.7;
   return ctx;
 }
 
-function noiseBuffer(c, dur) {
-  const len = Math.floor(c.sampleRate * dur);
-  const buf = c.createBuffer(1, len, c.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
-  return buf;
+let noise = null;
+function noiseBuf(c) {
+  if (noise) return noise;
+  const len = Math.floor(c.sampleRate * 0.05);
+  noise = c.createBuffer(1, len, c.sampleRate);
+  const d = noise.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return noise;
 }
 
-// A short "wooden" knock: filtered noise + a damped low sine.
-function knock(t, { freq = 1900, q = 1.1, body = 210, gain = 0.9, dur = 0.07 } = {}) {
-  const c = ac();
-  const vol = (settings.volume ?? 0.7) * gain;
-  const out = c.createGain();
-  out.gain.value = vol;
-  out.connect(c.destination);
+/** A decaying sine partial. */
+function partial(t, f, amp, decay, dest) {
+  const c = ctx;
+  const o = c.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(f, t);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(amp, t + 0.0015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  o.connect(g).connect(dest);
+  o.start(t);
+  o.stop(t + decay + 0.02);
+}
 
+/** Short filtered noise burst: the "contact" of wood on wood. */
+function click(t, { freq = 3800, q = 0.9, amp = 0.5, dur = 0.012 } = {}, dest) {
+  const c = ctx;
   const src = c.createBufferSource();
-  src.buffer = noiseBuffer(c, dur);
+  src.buffer = noiseBuf(c);
   const bp = c.createBiquadFilter();
   bp.type = 'bandpass';
   bp.frequency.value = freq;
   bp.Q.value = q;
-  const ng = c.createGain();
-  ng.gain.setValueAtTime(0.9, t);
-  ng.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  src.connect(bp).connect(ng).connect(out);
+  const g = c.createGain();
+  g.gain.setValueAtTime(amp, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(dest);
   src.start(t);
-
-  const osc = c.createOscillator();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(body, t);
-  osc.frequency.exponentialRampToValueAtTime(body * 0.55, t + 0.09);
-  const og = c.createGain();
-  og.gain.setValueAtTime(0.55, t);
-  og.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
-  osc.connect(og).connect(out);
-  osc.start(t);
-  osc.stop(t + 0.12);
+  src.stop(t + dur + 0.01);
 }
 
-function tone(t, f, dur, { type = 'sine', gain = 0.25, attack = 0.01 } = {}) {
+/**
+ * A wooden piece set down on a wooden board. The board resonates with a few inharmonic
+ * modes (like a small wood block); the piece adds a crisp contact click.
+ */
+function wood(t, { pitch = 1, gain = 1, bright = 1, decay = 1 } = {}) {
   const c = ac();
-  const o = c.createOscillator();
-  o.type = type;
-  o.frequency.value = f;
-  const g = c.createGain();
-  const vol = (settings.volume ?? 0.7) * gain;
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + attack);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(c.destination);
-  o.start(t);
-  o.stop(t + dur + 0.02);
+  const out = c.createGain();
+  out.gain.value = gain;
+  const tone = c.createBiquadFilter();
+  tone.type = 'lowpass';
+  tone.frequency.value = 5200 * bright;
+  tone.Q.value = 0.4;
+  tone.connect(out).connect(master);
+  const f0 = 560 * pitch;
+  partial(t, f0, 0.55, 0.075 * decay, tone);
+  partial(t, f0 * 2.31, 0.32, 0.045 * decay, tone);
+  partial(t, f0 * 3.93, 0.16, 0.028 * decay, tone);
+  partial(t, f0 * 0.5, 0.22, 0.05 * decay, tone); // low thump of the board
+  click(t, { freq: 3400 * bright, amp: 0.55 * bright, dur: 0.01 }, tone);
+}
+
+/** A soft mallet note (marimba-like) for chimes. */
+function mallet(t, f, { gain = 0.32, decay = 0.9 } = {}) {
+  const c = ac();
+  const out = c.createGain();
+  out.gain.value = gain;
+  out.connect(master);
+  partial(t, f, 0.7, decay, out);
+  partial(t, f * 4, 0.12, decay * 0.25, out);
+  partial(t, f * 9.9, 0.04, decay * 0.08, out);
+  click(t, { freq: 2400, amp: 0.05, dur: 0.008 }, out);
 }
 
 export function play(kind) {
   if (!settings.sound) return;
   try {
     const c = ac();
-    const t = c.currentTime + 0.005;
+    const t = c.currentTime + 0.004;
     switch (kind) {
       case 'move':
-        knock(t);
+        wood(t);
         break;
       case 'capture':
-        knock(t, { freq: 2600, q: 0.8, body: 260, gain: 1.0, dur: 0.05 });
-        knock(t + 0.045, { freq: 1500, q: 1.2, body: 170, gain: 0.8, dur: 0.07 });
+        // The captured piece is knocked away, then the capturing piece lands harder.
+        wood(t, { pitch: 1.18, gain: 0.55, bright: 1.25, decay: 0.6 });
+        wood(t + 0.028, { pitch: 1.05, gain: 1.1, bright: 1.15 });
         break;
       case 'castle':
-        knock(t);
-        knock(t + 0.11, { freq: 1700, body: 190, gain: 0.8 });
+        wood(t, { pitch: 0.97 });
+        wood(t + 0.085, { pitch: 1.08, gain: 0.85 });
         break;
       case 'check':
-        knock(t, { freq: 2200, body: 240 });
-        tone(t + 0.01, 880, 0.18, { type: 'triangle', gain: 0.12 });
+        wood(t, { pitch: 1.04 });
+        mallet(t + 0.02, 1318.5, { gain: 0.16, decay: 0.32 });
+        mallet(t + 0.02, 1975.5, { gain: 0.07, decay: 0.22 });
         break;
       case 'promote':
-        knock(t);
-        tone(t + 0.02, 660, 0.12, { type: 'triangle', gain: 0.12 });
-        tone(t + 0.1, 990, 0.18, { type: 'triangle', gain: 0.12 });
+        wood(t);
+        mallet(t + 0.05, 1046.5, { gain: 0.18, decay: 0.35 });
+        mallet(t + 0.13, 1568, { gain: 0.18, decay: 0.45 });
+        break;
+      case 'start':
+        mallet(t, 784, { gain: 0.26, decay: 0.7 });
+        mallet(t + 0.12, 1046.5, { gain: 0.26, decay: 0.9 });
         break;
       case 'end':
-        tone(t, 523.25, 0.5, { type: 'triangle', gain: 0.16 });
-        tone(t + 0.12, 659.25, 0.5, { type: 'triangle', gain: 0.16 });
-        tone(t + 0.24, 783.99, 0.7, { type: 'triangle', gain: 0.16 });
+        mallet(t, 1046.5, { gain: 0.24, decay: 0.8 });
+        mallet(t + 0.13, 784, { gain: 0.24, decay: 0.8 });
+        mallet(t + 0.26, 1046.5, { gain: 0.2, decay: 1.1 });
+        mallet(t + 0.26, 1318.5, { gain: 0.14, decay: 1.1 });
         break;
       case 'correct':
-        tone(t, 784, 0.16, { type: 'sine', gain: 0.22 });
-        tone(t + 0.09, 1175, 0.3, { type: 'sine', gain: 0.22 });
+        mallet(t, 1046.5, { gain: 0.26, decay: 0.45 });
+        mallet(t + 0.09, 1568, { gain: 0.26, decay: 0.7 });
         break;
       case 'wrong':
-        tone(t, 220, 0.22, { type: 'sawtooth', gain: 0.06 });
-        tone(t + 0.11, 185, 0.26, { type: 'sawtooth', gain: 0.06 });
+        mallet(t, 392, { gain: 0.3, decay: 0.35 });
+        mallet(t + 0.11, 349.2, { gain: 0.3, decay: 0.5 });
+        break;
+      case 'illegal':
+        wood(t, { pitch: 0.55, gain: 0.7, bright: 0.6, decay: 0.8 });
         break;
       case 'click':
-        knock(t, { freq: 3200, body: 400, gain: 0.35, dur: 0.03 });
+        click(t, { freq: 4200, amp: 0.25, dur: 0.008 }, master);
         break;
       case 'brilliant':
-        [784, 988, 1175, 1568].forEach((f, i) => tone(t + i * 0.07, f, 0.35, { type: 'sine', gain: 0.13 }));
+        [1046.5, 1318.5, 1568, 2093].forEach((f, i) => mallet(t + i * 0.075, f, { gain: 0.17, decay: 0.7 }));
         break;
     }
   } catch {}

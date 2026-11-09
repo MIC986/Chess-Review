@@ -3,6 +3,7 @@ import { icons } from './icons.js';
 import { loadSettings, settings } from './settings.js';
 import { GamesPage, HistoryPage, chesscomGame, openPgnModal } from './home.js';
 import { ReviewView } from './review.js';
+import { ProfilePage } from './profile.js';
 import { openSettings } from './settings-view.js';
 
 window.__icons = icons;
@@ -63,6 +64,7 @@ class App {
     this.navReview = item('review', 'Review', 'review');
     nav.replaceChildren(
       item('games', 'Games', 'search'),
+      item('profile', 'Profile', 'chart'),
       this.navReview,
       item('history', 'History', 'history'),
       item('pgn', 'PGN', 'pgn', () => openPgnModal(this)),
@@ -79,12 +81,16 @@ class App {
 
   go(page) {
     if (page === 'review' && !this.review) return;
+    if (this.page === 'profile' && page !== 'profile') this.pages.profile?.destroy();
     this.page = page;
     this.view.replaceChildren();
     if (page === 'games') {
       if (!this.pages.games) this.pages.games = new GamesPage(this);
       else this.pages.games.refreshReviewed().then(() => this.pages.games.renderTableOnly());
       this.view.append(this.pages.games.el);
+    } else if (page === 'profile') {
+      if (!this.pages.profile) this.pages.profile = new ProfilePage(this);
+      this.view.append(this.pages.profile.el);
     } else if (page === 'history') {
       this.pages.history = new HistoryPage(this);
       this.view.append(this.pages.history.el);
@@ -121,7 +127,7 @@ class App {
       try {
         const g = await invoke('cc_resolve', { kind: type, id, user: params.get('user') || null });
         t.remove();
-        this.openReview(chesscomGame(g));
+        this.openReview(chesscomGame(g, { viewer: params.get('user') || null }));
       } catch (e) {
         t.remove();
         toast(String(e), 'err', 5000);
@@ -187,7 +193,7 @@ class App {
         m.close();
         toast('Coach voices installed');
         const { COACHES } = await import('./coaches.js');
-        const c = COACHES[settings.coach] || COACHES.maya;
+        const c = COACHES[settings.coach] || COACHES.leo;
         voice.speak(c.hello, { force: true });
       } catch (e) {
         un();

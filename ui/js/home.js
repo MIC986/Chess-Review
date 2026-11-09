@@ -28,6 +28,7 @@ export function chesscomGame(g, extra = {}) {
     key: `cc-${g.id}`,
     meta: {
       source: 'chesscom',
+      viewer: extra.viewer || null,
       id: g.id,
       url: g.url,
       timeClass: g.timeClass,
@@ -287,6 +288,7 @@ export class GamesPage {
         if (myColor === 'white') extra.whiteAvatar = this.profile.avatar;
         if (myColor === 'black') extra.blackAvatar = this.profile.avatar;
       }
+      extra.viewer = this.profile?.username || this.user;
       this.app.openReview(chesscomGame(g, extra));
     };
     const row = h(
