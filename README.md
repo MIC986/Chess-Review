@@ -56,7 +56,18 @@ The browser extension makes chess.com's own **Game Review** buttons open the gam
 </tr>
 </table>
 
-<br/>
+## Profile Review
+
+<table>
+</tr>
+<td width="50%" valign="top">
+
+### Review your profile and get advices.
+  
+</td>
+</tr>
+</table>
+
 
 <div align="center">
 <table>
