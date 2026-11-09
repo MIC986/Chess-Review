@@ -9,6 +9,7 @@ mod engine;
 mod kokoro;
 mod live;
 mod openings;
+mod profile;
 mod setup;
 
 use base64::Engine as _;
@@ -26,6 +27,7 @@ struct AppState {
     pending_link: Mutex<Option<String>>,
     cancel: Mutex<Arc<AtomicBool>>,
     live: Mutex<Option<(Sender<live::LiveCmd>, String)>>,
+    profile_cancel: Mutex<Arc<AtomicBool>>,
 }
 
 fn engine_path(state: &AppState, custom: &Option<String>) -> PathBuf {
@@ -155,6 +157,61 @@ fn live_stop(state: State<AppState>) {
     if let Some((tx, _)) = state.live.lock().unwrap().as_ref() {
         let _ = tx.send(live::LiveCmd::Stop);
     }
+}
+
+// ------------------------------------------------------------ profile review
+
+#[tauri::command]
+fn profile_analyze(
+    app: AppHandle,
+    state: State<AppState>,
+    run: u64,
+    games: Vec<profile::ProfileGame>,
+    depth: u32,
+    workers: u32,
+    custom_engine: Option<String>,
+) -> Result<(), String> {
+    let path = engine_path(&state, &custom_engine);
+    if !path.exists() {
+        return Err("engine-missing".into());
+    }
+    let cancel = Arc::new(AtomicBool::new(false));
+    {
+        let mut c = state.profile_cancel.lock().unwrap();
+        c.store(true, std::sync::atomic::Ordering::Relaxed);
+        *c = cancel.clone();
+    }
+    let cache = state.data.join("profile-cache");
+    std::thread::spawn(move || {
+        let app2 = app.clone();
+        let on: Arc<profile::DigestFn> = Arc::new(move |done, total, digest| {
+            let _ = app2.emit("profile-game", json!({"run": run, "done": done, "total": total, "digest": digest}));
+        });
+        match profile::analyze_many(&path, &cache, games, depth.clamp(6, 22), workers, cancel, on) {
+            Ok(()) => {
+                let _ = app.emit("profile-done", json!({"run": run}));
+            }
+            Err(e) => {
+                let _ = app.emit("profile-error", json!({"run": run, "error": e}));
+            }
+        }
+    });
+    Ok(())
+}
+
+#[tauri::command]
+fn profile_cancel(state: State<AppState>) {
+    state.profile_cancel.lock().unwrap().store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
+#[tauri::command]
+fn profile_save(state: State<AppState>, username: String, report: Value) -> Result<(), String> {
+    write_json(&state.data.join("profiles").join(format!("{}.json", safe_key(&username.to_lowercase()))), &report)
+}
+
+#[tauri::command]
+fn profile_load(state: State<AppState>, username: String) -> Option<Value> {
+    read_json(&state.data.join("profiles").join(format!("{}.json", safe_key(&username.to_lowercase()))))
 }
 
 // ------------------------------------------------------------ chess helpers
@@ -313,6 +370,21 @@ fn save_review(data: &Path, review: &analysis::Review) -> Result<(), String> {
 #[tauri::command]
 fn load_review(state: State<AppState>, key: String) -> Option<Value> {
     read_json(&state.data.join("reviews").join(format!("{}.json", safe_key(&key))))
+}
+
+/// Saved review with up-to-date coach wording (rebuilt from the stored analysis if needed).
+#[tauri::command]
+fn refresh_review(state: State<AppState>, key: String) -> Result<Value, String> {
+    let path = state.data.join("reviews").join(format!("{}.json", safe_key(&key)));
+    let v = read_json(&path).ok_or("not found")?;
+    if v.get("coachVersion").and_then(|x| x.as_u64()).unwrap_or(0) >= analysis::COACH_VERSION as u64 {
+        return Ok(v);
+    }
+    let old: analysis::Review = serde_json::from_value(v).map_err(|e| e.to_string())?;
+    let new = analysis::rebuild_text(old)?;
+    let out = serde_json::to_value(&new).map_err(|e| e.to_string())?;
+    write_json(&path, &out)?;
+    Ok(out)
 }
 
 #[tauri::command]
@@ -515,8 +587,12 @@ fn main() {
         return;
     }
     openings::warm();
-    tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+    // Developer switch: run a test build next to the installed app without taking over
+    // its single-instance lock, link handler or extension bridge.
+    let dev_side_by_side = std::env::var_os("CHESSREVIEW_SIDE_BY_SIDE").is_some();
+    let mut builder = tauri::Builder::default();
+    if !dev_side_by_side {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if let Some(link) = find_link(&args) {
                 let _ = app.emit("deep-link", link);
             }
@@ -525,8 +601,10 @@ fn main() {
                 let _ = w.show();
                 let _ = w.set_focus();
             }
-        }))
-        .setup(|app| {
+        }));
+    }
+    builder
+        .setup(move |app| {
             let data = app.path().app_data_dir().unwrap_or_else(|_| std::env::temp_dir().join("chess-review"));
             let _ = std::fs::create_dir_all(&data);
             let args: Vec<String> = std::env::args().collect();
@@ -535,9 +613,12 @@ fn main() {
                 pending_link: Mutex::new(find_link(&args)),
                 cancel: Mutex::new(Arc::new(AtomicBool::new(false))),
                 live: Mutex::new(None),
+                profile_cancel: Mutex::new(Arc::new(AtomicBool::new(false))),
             });
-            let _ = register_protocol();
-            bridge::start(app.handle().clone());
+            if !dev_side_by_side {
+                let _ = register_protocol();
+                bridge::start(app.handle().clone());
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -557,7 +638,12 @@ fn main() {
             cc_archives,
             cc_month,
             cc_resolve,
+            profile_analyze,
+            profile_cancel,
+            profile_save,
+            profile_load,
             load_review,
+            refresh_review,
             history_list,
             history_remove,
             history_clear,

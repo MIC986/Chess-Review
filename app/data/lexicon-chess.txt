@@ -1,47 +1,72 @@
+activates ˈ æ k t ə v ˌ A t s
 analyzed ˈ æ n ᵊ l ˌ I z d
 arrows ˈ ɛ ɹ O z
 autoplaying ˈ ɔ ɾ O p l ˌ A ɪ ŋ
+averaged ˈ æ v ə ɹ ɪ ʤ d
+becomes b ə k ˈ ʌ m z
+bird's b ˈ ɜ ɹ d z
 bishop's b ˈ ɪ ʃ ə p s
 black's b l ˈ æ k s
+caro k ˈ ɑ ɹ O
 classifications k l ˌ æ s ə f ə k ˈ A ʃ ə n z
 com's k ˈ ɑ m z
 computed k ə m p j ˈ u t ᵻ d
 credits k ɹ ˈ ɛ d ə t s
 defaults d ə f ˈ ɔ l t s
+defended d ə f ˈ ɛ n d ᵻ d
+defenders d ə f ˈ ɛ n d ə ɹ z
 defends d ə f ˈ ɛ n d z
 delivered d ə l ˈ ɪ v ə ɹ d
 develops d ə v ˈ ɛ l ə p s
+disasters d ə z ˈ æ s t ə ɹ z
+discovered d ə s k ˈ ʌ v ə ɹ d
 endgames ˈ ɛ n d ɡ ˌ A m z
 endorsed ɪ n d ˈ ɔ ɹ s t
 engines ˈ ɛ n ʤ ə n z
 equalized ˈ i k w ə l ˌ I z d
 equalizes ˈ i k w ə l ˌ I z ᵻ z
+errors ˈ ɛ ɹ ə ɹ z
+examples ɪ ɡ z ˈ æ m p ə l z
+exchanges ɪ k s ʧ ˈ A n ʤ ᵻ z
 explored ɪ k s p l ˈ ɔ ɹ d
 extensions ɪ k s t ˈ ɛ n ʃ ᵊ n z
 gets ɡ ɛ t s
+giuoco ʤ ˈ w O k O
+habits h ˈ æ b ə t s
 highlighted h ˈ I l ˌ I t ᵻ d
 highlights h ˈ I l ˌ I t s
 icons ˈ I k ˌ ɑ n z
 inaccuracies ɪ n ˈ æ k j ə ɹ ə s i z
 instances ˈ ɪ n s t ᵊ n s ᵻ z
 js ʤ ˈ A z
+kann k ˈ ɑ n
 king's k ˈ ɪ ŋ z
 knight's n ˈ I t s
 labels l ˈ A b ə l z
+lucena l u s ˈ A n ə
 makes m ˌ A k s
 mated m ˈ æ t ᵻ d
 middlegame m ˈ ɪ d ᵊ l ɡ ˌ A m
 middlegames m ˈ ɪ d ᵊ l ɡ ˌ A m z
+minutes m ˈ ɪ n ə t s
 mistakes m ə s t ˈ A k s
 moments m ˈ O m ᵊ n t s
+nimzo n ˈ ɪ m z O
 openings ˈ O p ᵊ n ɪ ŋ z
 opens ˈ O p ᵊ n z
 opponent's ə p ˈ O n ə n t s
 outposts ˈ W t p ˌ O s t s
+owen's ˈ O ɪ n z
+patterns p ˈ æ ɾ ə ɹ n z
 pawn's p ˈ ɔ n z
+petrov's p ˈ ɛ t ɹ ɔ f s
+philidor f ˈ ɪ l ɪ d ɔ ɹ
+pirc's p ˈ ɪ ɹ t s
+principles p ɹ ˈ ɪ n s ə p ᵊ l z
 promoted p ɹ ə m ˈ O t ᵻ d
 puts p ˌ ʊ t s
 queen's k w ˈ i n z
+rated ɹ ˈ æ t ᵻ d
 recaptures ɹ i k ˈ æ p ʧ ə ɹ z
 resets ɹ i s ˈ ɛ t s
 restored ɹ ə s t ˈ ɔ ɹ d
@@ -54,7 +79,10 @@ rook's ɹ ˈ ʊ k s
 sacrificed s ˈ æ k ɹ ə f ˌ I s t
 sacrifices s ˈ æ k ɹ ə f ˌ I s ᵻ z
 shortcuts ʃ ˈ ɔ ɹ t k ˌ ʌ t s
+simplifies s ˈ ɪ m p l ə f ˌ I z
+strengthens s t ɹ ˈ ɛ ŋ θ ᵊ n z
 swatches s w ˈ ɔ ʧ ᵻ z
+targets t ˈ ɑ ɹ ɡ ə t s
 unpacked ˌ ʌ n p ˈ æ k t
 variations v ˌ ɛ ɹ i ˈ A ʃ ə n z
 white's w ˈ I t s

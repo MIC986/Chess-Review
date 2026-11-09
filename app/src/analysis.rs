@@ -5,7 +5,7 @@ use crate::coach::{self, MoveCtx};
 use crate::engine::{Engine, Line, Score};
 use crate::openings::book;
 use serde::{Deserialize, Serialize};
-use shakmaty::{Chess, Color, Move, Position, Role};
+use shakmaty::{Chess, Color, Move, Position, Role, Square};
 use std::collections::{BTreeMap, VecDeque};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -100,11 +100,14 @@ pub struct Review {
     pub depth: u32,
     pub analyzed_at: u64,
     pub meta: serde_json::Value,
+    /// Version of the coach wording; older saved reviews get their text rebuilt.
+    #[serde(default)]
+    pub coach_version: u32,
 }
 
-struct PosEval {
-    lines: Vec<Line>, // side-to-move perspective
-    terminal: Option<String>,
+pub(crate) struct PosEval {
+    pub(crate) lines: Vec<Line>, // side-to-move perspective
+    pub(crate) terminal: Option<String>,
 }
 
 fn stm_score(pe: &PosEval) -> Score {
@@ -213,27 +216,51 @@ pub fn classify_epl(epl: f64, is_best: bool) -> &'static str {
     }
 }
 
-/// Is `m` (played from `before`) a real material sacrifice?
-fn is_sacrifice(before: &Chess, after: &Chess, m: Move) -> Option<Role> {
+/// Is `m` (played from `before`) a real material sacrifice? Returns the piece offered.
+///
+/// Counts a piece moved to (or left on) a square where the opponent can legally take it and
+/// come out at least two points ahead, including a piece that was already attacked and could
+/// have been saved but was left en prise for something stronger.
+fn is_sacrifice(before: &Chess, after: &Chess, m: Move, prev_pos: Option<&Chess>) -> Option<Role> {
     let mover = before.turn();
     if m.is_promotion() {
         return None;
     }
     let captured = m.capture().map(value).unwrap_or(0);
-    let hp_after = hanging_pieces(after.board(), mover);
     let hp_before = hanging_pieces(before.board(), mover);
-    let worst_before = hp_before.first().map(|h| h.gain).unwrap_or(0);
-    let top = hp_after.first()?;
-    if top.role == Role::Pawn {
-        return None;
+    let legal_captures: Vec<Square> = after.legal_moves().iter().filter(|x| x.is_capture()).map(|x| x.to()).collect();
+    let mut best: Option<(Role, i32)> = None;
+    for h in hanging_pieces(after.board(), mover) {
+        if h.role == Role::Pawn || !legal_captures.contains(&h.square) {
+            continue;
+        }
+        if h.gain - captured < 2 {
+            continue;
+        }
+        let was = hp_before.iter().find(|b| b.square == h.square);
+        let fresh = h.square == m.to() || was.map_or(true, |b| h.gain > b.gain);
+        // Leaving a piece en prise only counts on the move right after it came under attack,
+        // not again on every later move of an earlier sacrifice.
+        let newly_attacked = prev_pos.map_or(true, |pp| !hanging_pieces(pp.board(), mover).iter().any(|x| x.square == h.square && x.role == h.role));
+        let left_en_prise = !fresh && newly_attacked && could_save(before, h.square);
+        if (fresh || left_en_prise) && best.map_or(true, |b| h.gain > b.1) {
+            best = Some((h.role, h.gain));
+        }
     }
-    let net = top.gain - captured;
-    // Must offer at least a minor piece for a pawn, and more than was already en prise.
-    if net >= 2 && top.gain > worst_before {
-        Some(top.role)
-    } else {
-        None
-    }
+    best.map(|b| b.0)
+}
+
+/// Could the piece on `sq` have moved to a square where it is not lost?
+fn could_save(before: &Chess, sq: Square) -> bool {
+    let mover = before.turn();
+    before.legal_moves().iter().any(|mv| {
+        if mv.from() != Some(sq) {
+            return false;
+        }
+        let mut p = before.clone();
+        p.play_unchecked(*mv);
+        see(p.board(), mv.to(), !mover) == 0
+    })
 }
 
 fn is_material_win_capture(before: &Chess, m: Move) -> bool {
@@ -241,7 +268,7 @@ fn is_material_win_capture(before: &Chess, m: Move) -> bool {
         let mut after = before.clone();
         after.play_unchecked(m);
         let back = see(after.board(), m.to(), !before.turn());
-        return value(cap) - back >= 1;
+        return value(cap) - back >= 2 || (back == 0 && cap != Role::Pawn);
     }
     false
 }
@@ -363,7 +390,7 @@ pub fn review_game(
     Ok(build_review(&game, &positions, &evals, key, meta, opts.depth, engine_name))
 }
 
-fn build_review(
+pub(crate) fn build_review(
     game: &ParsedGame,
     positions: &[Chess],
     evals: &[PosEval],
@@ -475,19 +502,29 @@ fn build_review(
         let prev_move = if i > 0 { Some(game.moves[i - 1].mv) } else { None };
 
         if class == "best" || class == "excellent" {
-            // Brilliant: sound sacrifice that is not in a losing position afterwards
-            let second_w = pe.lines.get(1).map(|l| l.score.win_pct());
-            let already_crushing = second_w.map_or(false, |w| w >= 90.0) || best_w >= 97.0;
-            if is_sacrifice(before, after, pm.mv).is_some() && played_w >= 45.0 && !already_crushing && epl <= 0.02 {
+            // Strongest alternative to the move actually played (never the played move itself).
+            let alt_w = pe
+                .lines
+                .iter()
+                .filter(|l| l.pv.first() != Some(&pm.uci))
+                .map(|l| l.score.win_pct())
+                .fold(None, |a: Option<f64>, w| Some(a.map_or(w, |a| a.max(w))));
+            let mating = played_score.mate.map_or(false, |n| n > 0);
+            // Brilliant: a sound sacrifice. Mating sacrifices always count; otherwise the
+            // position must not be completely winning anyway without it.
+            let winning_anyway = !mating && alt_w.map_or(false, |w| w >= 97.0);
+            if epl <= 0.02 && played_w >= 45.0 && !winning_anyway && is_sacrifice(before, after, pm.mv, if i > 0 { Some(&positions[i - 1]) } else { None }).is_some() {
                 class = "brilliant".into();
-            } else if let Some(sw) = second_w {
-                let gap = best_w - sw;
+            } else if let Some(alt) = alt_w {
+                // Great: the only good move, finding it changes the outcome.
+                let gap = played_w - alt;
                 let recapture = prev_move.map_or(false, |p| p.is_capture() && p.to() == pm.mv.to() && pm.mv.is_capture());
                 let escaping = pm.mv.from().map_or(false, |f| {
                     hanging_pieces(before.board(), mover).iter().any(|h| h.square == f && value(h.role) >= 3)
                 });
                 let obvious = is_material_win_capture(before, pm.mv) || recapture || after.is_checkmate() || escaping;
-                if (played_is_best || epl <= 0.005) && gap >= 18.0 && played_w >= 40.0 && !obvious && pe.lines.len() >= 2 {
+                let only_move = (played_is_best || epl <= 0.005) && gap >= 12.0;
+                if only_move && played_w >= 30.0 && !obvious {
                     class = "great".into();
                 }
             }
@@ -665,7 +702,51 @@ fn build_review(
             .map(|d| d.as_secs())
             .unwrap_or(0),
         meta,
+        coach_version: COACH_VERSION,
     }
+}
+
+pub const COACH_VERSION: u32 = 3;
+
+/// Rebuild classifications and coach text of a saved review from its stored engine lines.
+pub fn rebuild_text(old: Review) -> Result<Review, String> {
+    let start = pos_from_fen(&old.start_fen)?;
+    let mut positions = vec![start.clone()];
+    let mut moves = Vec::with_capacity(old.moves.len());
+    for m in &old.moves {
+        let p = positions.last().unwrap();
+        let mv = parse_uci(p, &m.uci).ok_or("bad move in saved review")?;
+        let mut next = p.clone();
+        next.play_unchecked(mv);
+        moves.push(ParsedMove { mv, san: m.san.clone(), uci: m.uci.clone(), clock: m.clock });
+        positions.push(next);
+    }
+    if old.positions.len() != positions.len() {
+        return Err("saved review does not match its moves".into());
+    }
+    let evals: Vec<PosEval> = old
+        .positions
+        .iter()
+        .zip(&positions)
+        .map(|(po, p)| PosEval {
+            lines: po
+                .lines
+                .iter()
+                .enumerate()
+                .map(|(k, l)| Line {
+                    multipv: k as u32 + 1,
+                    depth: old.depth,
+                    score: if p.turn() == Color::White { l.eval } else { l.eval.negate() },
+                    pv: l.uci.clone(),
+                })
+                .collect(),
+            terminal: po.terminal.clone(),
+        })
+        .collect();
+    let game = ParsedGame { headers: old.headers.clone().into_iter().collect(), start, start_fen: old.start_fen.clone(), moves };
+    let mut r = build_review(&game, &positions, &evals, old.key, old.meta, old.depth, old.engine);
+    r.analyzed_at = old.analyzed_at;
+    Ok(r)
 }
 
 fn make_summary(
