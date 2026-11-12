@@ -15,7 +15,7 @@ Chess.com reviews · open source.
 [![Rust](https://img.shields.io/badge/Rust-Tauri%202-81b64c?style=for-the-badge&logo=rust&logoColor=white)](https://tauri.app)
 [![Engine](https://img.shields.io/badge/engine-Stockfish%2019-749bbf?style=for-the-badge)](https://stockfishchess.org)
 
-[Features](#-features) · [Browser extension](#-browser-extension) · [Build from source](#%EF%B8%8F-build-from-source)
+[Features](#-features) · [Browser extension](#-browser-extension)
 
 <br/>
 
